@@ -152,8 +152,7 @@
     <Compile Include="ContentAssociationAttribute.cs" />
     <Compile Include="ContentAssociationsHelper.cs" />
     <Compile Include="ContentEvents.cs" />
-    <Compile Include="Initialization\DependencyResolverInitialization.cs" />
-    <Compile Include="Initialization\EventInitialization.cs" />
+    <Compile Include="Initialization\ModuleInitializer.cs" />
     <Compile Include="IHasTwoWayRelation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyWriter.cs" />

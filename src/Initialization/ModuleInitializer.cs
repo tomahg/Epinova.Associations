@@ -7,7 +7,7 @@ namespace Epinova.Associations.Initialization
 {
     [InitializableModule]
     [ModuleDependency(typeof(ServiceContainerInitialization))]
-    public class EventInitialization : IInitializableModule
+    public class ModuleInitializer : IConfigurableModule
     {
         public void Initialize(InitializationEngine context)
         {
@@ -17,6 +17,11 @@ namespace Epinova.Associations.Initialization
 
         public void Uninitialize(InitializationEngine context)
         {
+        }
+
+        public void ConfigureContainer(ServiceConfigurationContext context)
+        {
+            context.Container.Configure(x => x.For<Showstopper>().Singleton());
         }
     }
 }
