@@ -42,5 +42,5 @@ You can even use `[AllowedTypes]` in combination with this to restrict what type
     {
         [ContentAssociation]
         [AllowedTypes(typeof(EmpolyeePage))]
-        public virtual IList<ContentReference> EmployeeDocuments { get; set; }<ContentReference>
+        public virtual IList<ContentReference> EmployeeDocuments { get; set; }
     }
