@@ -149,9 +149,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ContentAssociationAttribute.cs" />
     <Compile Include="ContentEvents.cs" />
-    <Compile Include="DependencyResolverInitialization.cs" />
-    <Compile Include="EventInitialization.cs" />
+    <Compile Include="Initialization\DependencyResolverInitialization.cs" />
+    <Compile Include="Initialization\EventInitialization.cs" />
     <Compile Include="IHasTwoWayRelation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Showstopper.cs" />

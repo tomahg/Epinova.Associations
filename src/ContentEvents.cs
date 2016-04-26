@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using EPiServer;
 using EPiServer.Core;
+using EPiServer.DataAbstraction;
 using EPiServer.DataAccess;
 using EPiServer.Security;
 using EPiServer.ServiceLocation;
@@ -21,67 +24,159 @@ namespace Epinova.Associations
                 return;
 
             var contentRepo = ServiceLocator.Current.GetInstance<IContentRepository>();
-
             var currentlyPublishedVersion = contentRepo.Get<IHasTwoWayRelation>(new ContentReference(args.Content.ContentLink.ID, true));
 
-            var itemsToRemoveSourceFrom = GetItemsToRemoveSourceFrom(currentlyPublishedVersion, sourceRelationContent);
+            var associationProperties = GetAssociationProperties(sourceRelationContent);
 
-            foreach (var itemToRemoveSourceFrom in itemsToRemoveSourceFrom)
+            foreach (var property in associationProperties)
             {
-                IHasTwoWayRelation relatedContentToRemoveFrom;
-                if (!contentRepo.TryGet(itemToRemoveSourceFrom, out relatedContentToRemoveFrom))
-                    continue;
+                IEnumerable<ContentReference> itemsToRemoveSourceFrom = GetItemsToRemoveSourceFrom(property, currentlyPublishedVersion, sourceRelationContent);
 
-                var writableContentToRemoveFrom = relatedContentToRemoveFrom.CreateWritableClone() as IHasTwoWayRelation;
-                var contentAreaItem = writableContentToRemoveFrom.TwoWayRelatedContent.Items.FirstOrDefault(x => x.ContentLink.ID == sourceRelationContent.ContentLink.ID);
-                writableContentToRemoveFrom.TwoWayRelatedContent.Items.Remove(contentAreaItem);
+                foreach (var itemToRemoveSourceFrom in itemsToRemoveSourceFrom)
+                {
+                    IHasTwoWayRelation relatedContentToRemoveFrom;
+                    if (!contentRepo.TryGet(itemToRemoveSourceFrom, out relatedContentToRemoveFrom))
+                        continue;
 
-                showstopper.StopShowFor(writableContentToRemoveFrom.ContentLink.ID);
+                    var writableContentToRemoveFrom = relatedContentToRemoveFrom.CreateWritableClone() as IHasTwoWayRelation;
+                    var propertyToRemoveFrom = writableContentToRemoveFrom.GetType().GetProperties().FirstOrDefault(x => x.Name == property.Name);
 
-                contentRepo.Save(writableContentToRemoveFrom, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
-            }
+                    if (propertyToRemoveFrom.PropertyType == typeof (ContentArea))
+                    {
+                        ContentArea contentArea = propertyToRemoveFrom.GetValue(writableContentToRemoveFrom) as ContentArea;
+                        var itemToRemove = contentArea.Items.FirstOrDefault(x => x.ContentLink.ID == sourceRelationContent.ContentLink.ID);
+                        contentArea.Items.Remove(itemToRemove);
+                    }
 
-            foreach (var item in sourceRelationContent.TwoWayRelatedContent.Items)
-            {
-                if (item.ContentLink.ID == sourceRelationContent.ContentLink.ID) // Avoid adding oneself, it'll only create trouble
-                    continue;
+                    if (propertyToRemoveFrom.PropertyType == typeof (IList<ContentReference>))
+                    {
+                        IList<ContentReference> contentRefList = propertyToRemoveFrom.GetValue(writableContentToRemoveFrom) as IList<ContentReference>;
+                        var itemToRemove = contentRefList.FirstOrDefault(x => x.ID == sourceRelationContent.ContentLink.ID);
+                        contentRefList.Remove(itemToRemove);
+                    }
 
-                IHasTwoWayRelation relatedContent;
-                if (!contentRepo.TryGet(item.ContentLink, out relatedContent))
-                    continue;
+                    showstopper.StopShowFor(writableContentToRemoveFrom.ContentLink.ID);
+                    contentRepo.Save(writableContentToRemoveFrom, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
+                }
 
-                var alreadyContained = relatedContent.TwoWayRelatedContent != null &&
-                                        relatedContent.TwoWayRelatedContent.Items.Any(x => x.ContentLink.ID == sourceRelationContent.ContentLink.ID);
+                if (property.PropertyType == typeof (ContentArea))
+                {
+                    var contentArea = property.GetValue(sourceRelationContent) as ContentArea;
 
-                if (alreadyContained)
-                    continue;
+                    foreach (var item in contentArea.Items)
+                    {
+                        if (item.ContentLink.ID == sourceRelationContent.ContentLink.ID) // Avoid adding oneself, it'll only create trouble
+                            continue;
 
-                showstopper.StopShowFor(item.ContentLink.ID);
-                var writableRelatedContent = relatedContent.CreateWritableClone() as IHasTwoWayRelation;
+                        IHasTwoWayRelation relatedContent;
+                        if (!contentRepo.TryGet(item.ContentLink, out relatedContent))
+                            continue;
 
-                if (writableRelatedContent.TwoWayRelatedContent == null)
-                    writableRelatedContent.TwoWayRelatedContent = new ContentArea();
+                        var relatedPropertyContent = relatedContent.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(x => x.Name == property.Name);
 
-                var newContentAreaItem = new ContentAreaItem { ContentLink = sourceRelationContent.ContentLink };
-                writableRelatedContent.TwoWayRelatedContent.Items.Add(newContentAreaItem);
+                        var writableRelatedContent = relatedContent.CreateWritableClone() as IHasTwoWayRelation;
+                        if (relatedPropertyContent.PropertyType == typeof (ContentArea))
+                        {
+                            var relatedContentArea = relatedPropertyContent.GetValue(writableRelatedContent) as ContentArea;
 
-                contentRepo.Save(writableRelatedContent, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
+                            var alreadyContained = relatedContentArea != null &&
+                                                   relatedContentArea.Items.Any(x => x.ContentLink.ID == sourceRelationContent.ContentLink.ID);
+
+                            if (alreadyContained)
+                                continue;
+                            
+                            if (relatedContentArea == null)
+                                relatedContentArea = new ContentArea();
+
+                            var newContentAreaItem = new ContentAreaItem { ContentLink = sourceRelationContent.ContentLink };
+                            relatedContentArea.Items.Add(newContentAreaItem);
+                        }
+                        if (relatedPropertyContent.PropertyType == typeof (IList<ContentReference>))
+                        {
+                            var relatedContentRefList = relatedPropertyContent.GetValue(writableRelatedContent) as IList<ContentReference>;
+
+                            var alreadyContained = relatedContentRefList != null &&
+                                                   relatedContentRefList.Any(x => x.ID == sourceRelationContent.ContentLink.ID);
+
+                            if (alreadyContained)
+                                continue;
+
+                            if (relatedContentRefList == null)
+                                relatedContentRefList = new List<ContentReference>();
+
+                            relatedContentRefList.Add(sourceRelationContent.ContentLink);
+                        }
+
+                        showstopper.StopShowFor(item.ContentLink.ID);
+                        contentRepo.Save(writableRelatedContent, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
+                    }
+                }
             }
 
             showstopper.StartShow();
         }
 
-        private static IEnumerable<ContentReference> GetItemsToRemoveSourceFrom(IHasTwoWayRelation currentlyPublishedVersion, IHasTwoWayRelation sourceRelationContent)
+        private static IEnumerable<ContentReference> GetItemsToRemoveSourceFrom(PropertyInfo property, IHasTwoWayRelation currentlyPublishedVersion, IHasTwoWayRelation sourceRelationContent)
         {
-            var oldContentIds = currentlyPublishedVersion.TwoWayRelatedContent.Items.Select(x => x.ContentLink.ID);
-            var newContentIds = sourceRelationContent.TwoWayRelatedContent.Items.Select(x => x.ContentLink.ID);
-            var itemsToRemoveFrom = oldContentIds.Except(newContentIds);
+            if (property.PropertyType == typeof (ContentArea))
+            {
+                var currentContent = property.GetValue(currentlyPublishedVersion) as ContentArea;
+                var newContent = property.GetValue(sourceRelationContent) as ContentArea;
 
-            var itemsToRemoveSourceFrom = currentlyPublishedVersion.TwoWayRelatedContent.Items
-                                                                                        .Where(x => itemsToRemoveFrom.Contains(x.ContentLink.ID))
-                                                                                        .Select(x => x.ContentLink);
+                var oldContentIds = currentContent.Items.Select(x => x.ContentLink.ID);
+                var newContentIds = newContent.Items.Select(x => x.ContentLink.ID);
 
-            return itemsToRemoveSourceFrom;
+                var itemsToRemoveFrom = oldContentIds.Except(newContentIds);
+
+                return  currentContent.Items
+                                      .Where(x => itemsToRemoveFrom.Contains(x.ContentLink.ID))
+                                      .Select(x => x.ContentLink);
+            }
+
+            if (property.PropertyType == typeof (IList<ContentReference>))
+            {
+                var currentContent = property.GetValue(currentlyPublishedVersion) as IList<ContentReference>;
+                var newContent = property.GetValue(sourceRelationContent) as IList<ContentReference>;
+
+                var oldContentIds = currentContent.Select(x => x.ID);
+                var newContentIds = newContent.Select(x => x.ID);
+
+                var itemsToRemoveFrom = oldContentIds.Except(newContentIds);
+
+                return currentContent.Where(x => itemsToRemoveFrom.Contains(x.ID));
+            }
+
+            throw new Exception("Attempt to use property on unsupported property. Currently, ContentArea and IList<ContentArea> is supported");
         }
+
+        private static IEnumerable<PropertyInfo> GetAssociationProperties(IHasTwoWayRelation sourceRelationContent)
+        {
+            var contentType = sourceRelationContent.GetType();
+
+            var contentProperties = contentType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (var property in contentProperties.Where(x => x.PropertyType == typeof(ContentArea) ||
+                                                                  x.PropertyType == typeof(IList<ContentReference>)))
+            {
+                var associationAttribute = property.GetCustomAttributes(typeof(ContentAssociationAttribute)).FirstOrDefault() as ContentAssociationAttribute;
+                if (associationAttribute == null)
+                    continue;
+
+                yield return property;
+            }
+        }
+
+        //private static IEnumerable<ContentReference> GetItemsToRemoveSourceFrom(IHasTwoWayRelation currentlyPublishedVersion, IHasTwoWayRelation sourceRelationContent)
+        //{
+        //    var oldContentIds = currentlyPublishedVersion.TwoWayRelatedContent.Items.Select(x => x.ContentLink.ID);
+        //    var newContentIds = sourceRelationContent.TwoWayRelatedContent.Items.Select(x => x.ContentLink.ID);
+        //    var itemsToRemoveFrom = oldContentIds.Except(newContentIds);
+
+        //    var itemsToRemoveSourceFrom = currentlyPublishedVersion.TwoWayRelatedContent.Items
+        //                                                                                .Where(x => itemsToRemoveFrom.Contains(x.ContentLink.ID))
+        //                                                                                .Select(x => x.ContentLink);
+
+        //    return itemsToRemoveSourceFrom;
+        //}
     }
 }

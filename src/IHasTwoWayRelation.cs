@@ -5,6 +5,5 @@ namespace Epinova.Associations
 {
     public interface IHasTwoWayRelation : IContent, IReadOnly
     {
-        ContentArea TwoWayRelatedContent { get; set; }
     }
 }
