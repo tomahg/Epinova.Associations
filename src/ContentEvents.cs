@@ -43,8 +43,12 @@ namespace Epinova.Associations
                     if (propertyToRemoveFrom.PropertyType == typeof (ContentArea))
                     {
                         ContentArea contentArea = propertyToRemoveFrom.GetValue(writableContentToRemoveFrom) as ContentArea;
+                        if (contentArea == null)
+                            continue;
+
                         var itemToRemove = contentArea.Items.FirstOrDefault(x => x.ContentLink.ID == sourceRelationContent.ContentLink.ID);
-                        contentArea.Items.Remove(itemToRemove);
+                        if (itemToRemove != null)
+                            contentArea.Items.Remove(itemToRemove);
                     }
 
                     if (propertyToRemoveFrom.PropertyType == typeof (IList<ContentReference>))
@@ -58,58 +62,60 @@ namespace Epinova.Associations
                     contentRepo.Save(writableContentToRemoveFrom, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
                 }
 
-                if (property.PropertyType == typeof (ContentArea))
+                IEnumerable<ContentReference> itemsToAddAssociationTo = ContentAssociationsHelper.GetItemsToAddAssociationTo(property, sourceRelationContent);
+
+                foreach (var item in itemsToAddAssociationTo)
                 {
-                    var contentArea = property.GetValue(sourceRelationContent) as ContentArea;
+                    if (item.ID == sourceRelationContent.ContentLink.ID) // Avoid adding oneself, it'll only create trouble
+                        continue;
 
-                    foreach (var item in contentArea.Items)
+                    IHasTwoWayRelation relatedContent;
+                    if (!contentRepo.TryGet(item, out relatedContent))
+                        continue;
+
+                    var relatedPropertyContent = relatedContent.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(x => x.Name == property.Name);
+
+                    var writableRelatedContent = relatedContent.CreateWritableClone() as IHasTwoWayRelation;
+                    if (relatedPropertyContent.PropertyType == typeof(ContentArea))
                     {
-                        if (item.ContentLink.ID == sourceRelationContent.ContentLink.ID) // Avoid adding oneself, it'll only create trouble
+                        var relatedContentArea = relatedPropertyContent.GetValue(writableRelatedContent) as ContentArea;
+
+                        var alreadyContained = relatedContentArea != null &&
+                                               relatedContentArea.Items.Any(x => x.ContentLink.ID == sourceRelationContent.ContentLink.ID);
+
+                        if (alreadyContained)
                             continue;
 
-                        IHasTwoWayRelation relatedContent;
-                        if (!contentRepo.TryGet(item.ContentLink, out relatedContent))
-                            continue;
-
-                        var relatedPropertyContent = relatedContent.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(x => x.Name == property.Name);
-
-                        var writableRelatedContent = relatedContent.CreateWritableClone() as IHasTwoWayRelation;
-                        if (relatedPropertyContent.PropertyType == typeof (ContentArea))
-                        {
-                            var relatedContentArea = relatedPropertyContent.GetValue(writableRelatedContent) as ContentArea;
-
-                            var alreadyContained = relatedContentArea != null &&
-                                                   relatedContentArea.Items.Any(x => x.ContentLink.ID == sourceRelationContent.ContentLink.ID);
-
-                            if (alreadyContained)
-                                continue;
-                            
-                            if (relatedContentArea == null)
-                                relatedContentArea = new ContentArea();
-
-                            var newContentAreaItem = new ContentAreaItem { ContentLink = sourceRelationContent.ContentLink };
-                            relatedContentArea.Items.Add(newContentAreaItem);
+                        if (relatedContentArea == null) { 
+                            relatedContentArea = new ContentArea();
+                            relatedPropertyContent.SetValue(writableRelatedContent, relatedContentArea);
                         }
 
-                        if (relatedPropertyContent.PropertyType == typeof (IList<ContentReference>))
-                        {
-                            var relatedContentRefList = relatedPropertyContent.GetValue(writableRelatedContent) as IList<ContentReference>;
-
-                            var alreadyContained = relatedContentRefList != null &&
-                                                   relatedContentRefList.Any(x => x.ID == sourceRelationContent.ContentLink.ID);
-
-                            if (alreadyContained)
-                                continue;
-
-                            if (relatedContentRefList == null)
-                                relatedContentRefList = new List<ContentReference>();
-
-                            relatedContentRefList.Add(sourceRelationContent.ContentLink);
-                        }
-
-                        showstopper.StopShowFor(item.ContentLink.ID);
-                        contentRepo.Save(writableRelatedContent, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
+                        var newContentAreaItem = new ContentAreaItem { ContentLink = sourceRelationContent.ContentLink };
+                        relatedContentArea.Items.Add(newContentAreaItem);
                     }
+
+                    if (relatedPropertyContent.PropertyType == typeof(IList<ContentReference>))
+                    {
+                        var relatedContentRefList = relatedPropertyContent.GetValue(writableRelatedContent) as IList<ContentReference>;
+
+                        var alreadyContained = relatedContentRefList != null &&
+                                               relatedContentRefList.Any(x => x.ID == sourceRelationContent.ContentLink.ID);
+
+                        if (alreadyContained)
+                            continue;
+
+                        if (relatedContentRefList == null)
+                        {
+                            relatedContentRefList = new List<ContentReference>();
+                            relatedPropertyContent.SetValue(writableRelatedContent, relatedContentRefList);
+                        }
+
+                        relatedContentRefList.Add(sourceRelationContent.ContentLink);
+                    }
+
+                    showstopper.StopShowFor(item.ID);
+                    contentRepo.Save(writableRelatedContent, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
                 }
             }
 
