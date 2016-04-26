@@ -6,7 +6,7 @@ using EPiServer.Core;
 
 namespace Epinova.Associations
 {
-    internal class ContentAssociationsHelper
+    internal class ContentInspector
     {
         private readonly Type[] _supportedTypes = { typeof (ContentArea), typeof (IList<ContentReference>) };
 

@@ -19,7 +19,7 @@ namespace Epinova.Associations
 
             var contentRepo = ServiceLocator.Current.GetInstance<IContentRepository>();
             var propertyWriter = ServiceLocator.Current.GetInstance<PropertyWriter>();
-            var contentAssociationsHelper = ServiceLocator.Current.GetInstance<ContentAssociationsHelper>();
+            var contentAssociationsHelper = ServiceLocator.Current.GetInstance<ContentInspector>();
 
             var currentContentVersion = contentRepo.Get<IHasTwoWayRelation>(new ContentReference(args.Content.ContentLink.ID, true));
 

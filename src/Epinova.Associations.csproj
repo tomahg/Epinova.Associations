@@ -150,7 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ContentAssociationAttribute.cs" />
-    <Compile Include="ContentAssociationsHelper.cs" />
+    <Compile Include="ContentInspector.cs" />
     <Compile Include="ContentEvents.cs" />
     <Compile Include="Initialization\ModuleInitializer.cs" />
     <Compile Include="IHasTwoWayRelation.cs" />

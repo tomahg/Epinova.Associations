@@ -5,16 +5,14 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Epinova.Associations")]
+[assembly: AssemblyTitle("Epinova.AssociationsTests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Epinova.Associations")]
+[assembly: AssemblyProduct("Epinova.AssociationsTests")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-
-[assembly:InternalsVisibleTo("Epinova.AssociationsTests")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
@@ -22,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("d3ae5af8-5bac-4381-8d96-9964477c0f50")]
+[assembly: Guid("3e5e8813-2c5f-4bb7-a541-44a2ddec9eac")]
 
 // Version information for an assembly consists of the following four values:
 //
