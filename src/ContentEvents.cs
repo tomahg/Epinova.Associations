@@ -18,18 +18,20 @@ namespace Epinova.Associations
             if (showstopper.IsShowStoppedFor(args.Content.ContentLink.ID))
                 return;
 
-            var sourceRelationContent = args.Content as IHasTwoWayRelation;
-            if (sourceRelationContent == null)
+            var associationSourceContent = args.Content as IHasTwoWayRelation;
+            if (associationSourceContent == null)
                 return;
 
             var contentRepo = ServiceLocator.Current.GetInstance<IContentRepository>();
+            var propertyWriter = ServiceLocator.Current.GetInstance<PropertyWriter>();
+
             var currentlyPublishedVersion = contentRepo.Get<IHasTwoWayRelation>(new ContentReference(args.Content.ContentLink.ID, true));
 
-            var associationProperties = ContentAssociationsHelper.GetAssociationProperties(sourceRelationContent);
+            var associationProperties = ContentAssociationsHelper.GetAssociationProperties(associationSourceContent);
 
             foreach (var property in associationProperties)
             {
-                IEnumerable<ContentReference> itemsToRemoveSourceFrom = ContentAssociationsHelper.GetItemsToRemoveSourceFrom(property, currentlyPublishedVersion, sourceRelationContent);
+                IEnumerable<ContentReference> itemsToRemoveSourceFrom = ContentAssociationsHelper.GetItemsToRemoveSourceFrom(property, currentlyPublishedVersion, associationSourceContent);
 
                 foreach (var itemToRemoveSourceFrom in itemsToRemoveSourceFrom)
                 {
@@ -46,7 +48,7 @@ namespace Epinova.Associations
                         if (contentArea == null)
                             continue;
 
-                        var itemToRemove = contentArea.Items.FirstOrDefault(x => x.ContentLink.ID == sourceRelationContent.ContentLink.ID);
+                        var itemToRemove = contentArea.Items.FirstOrDefault(x => x.ContentLink.ID == associationSourceContent.ContentLink.ID);
                         if (itemToRemove != null)
                             contentArea.Items.Remove(itemToRemove);
                     }
@@ -54,7 +56,7 @@ namespace Epinova.Associations
                     if (propertyToRemoveFrom.PropertyType == typeof (IList<ContentReference>))
                     {
                         IList<ContentReference> contentRefList = propertyToRemoveFrom.GetValue(writableContentToRemoveFrom) as IList<ContentReference>;
-                        var itemToRemove = contentRefList.FirstOrDefault(x => x.ID == sourceRelationContent.ContentLink.ID);
+                        var itemToRemove = contentRefList.FirstOrDefault(x => x.ID == associationSourceContent.ContentLink.ID);
                         contentRefList.Remove(itemToRemove);
                     }
 
@@ -62,60 +64,11 @@ namespace Epinova.Associations
                     contentRepo.Save(writableContentToRemoveFrom, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
                 }
 
-                IEnumerable<ContentReference> itemsToAddAssociationTo = ContentAssociationsHelper.GetItemsToAddAssociationTo(property, sourceRelationContent);
+                IEnumerable<ContentReference> associationTargets = ContentAssociationsHelper.GetItemsToAddAssociationTo(property, associationSourceContent);
 
-                foreach (var item in itemsToAddAssociationTo)
+                foreach (var associationTarget in associationTargets)
                 {
-                    if (item.ID == sourceRelationContent.ContentLink.ID) // Avoid adding oneself, it'll only create trouble
-                        continue;
-
-                    IHasTwoWayRelation relatedContent;
-                    if (!contentRepo.TryGet(item, out relatedContent))
-                        continue;
-
-                    var relatedPropertyContent = relatedContent.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(x => x.Name == property.Name);
-
-                    var writableRelatedContent = relatedContent.CreateWritableClone() as IHasTwoWayRelation;
-                    if (relatedPropertyContent.PropertyType == typeof(ContentArea))
-                    {
-                        var relatedContentArea = relatedPropertyContent.GetValue(writableRelatedContent) as ContentArea;
-
-                        var alreadyContained = relatedContentArea != null &&
-                                               relatedContentArea.Items.Any(x => x.ContentLink.ID == sourceRelationContent.ContentLink.ID);
-
-                        if (alreadyContained)
-                            continue;
-
-                        if (relatedContentArea == null) { 
-                            relatedContentArea = new ContentArea();
-                            relatedPropertyContent.SetValue(writableRelatedContent, relatedContentArea);
-                        }
-
-                        var newContentAreaItem = new ContentAreaItem { ContentLink = sourceRelationContent.ContentLink };
-                        relatedContentArea.Items.Add(newContentAreaItem);
-                    }
-
-                    if (relatedPropertyContent.PropertyType == typeof(IList<ContentReference>))
-                    {
-                        var relatedContentRefList = relatedPropertyContent.GetValue(writableRelatedContent) as IList<ContentReference>;
-
-                        var alreadyContained = relatedContentRefList != null &&
-                                               relatedContentRefList.Any(x => x.ID == sourceRelationContent.ContentLink.ID);
-
-                        if (alreadyContained)
-                            continue;
-
-                        if (relatedContentRefList == null)
-                        {
-                            relatedContentRefList = new List<ContentReference>();
-                            relatedPropertyContent.SetValue(writableRelatedContent, relatedContentRefList);
-                        }
-
-                        relatedContentRefList.Add(sourceRelationContent.ContentLink);
-                    }
-
-                    showstopper.StopShowFor(item.ID);
-                    contentRepo.Save(writableRelatedContent, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
+                    propertyWriter.AddAssociation(associationTarget, associationSourceContent, property);
                 }
             }
 
