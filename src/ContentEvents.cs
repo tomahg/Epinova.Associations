@@ -31,48 +31,23 @@ namespace Epinova.Associations
 
             foreach (var property in associationProperties)
             {
-                IEnumerable<ContentReference> itemsToRemoveSourceFrom = ContentAssociationsHelper.GetItemsToRemoveSourceFrom(property, currentlyPublishedVersion, associationSourceContent);
+                IEnumerable<ContentReference> associationRemovalTargets = ContentAssociationsHelper.GetItemsToRemoveSourceFrom(property, currentlyPublishedVersion, associationSourceContent);
 
-                foreach (var itemToRemoveSourceFrom in itemsToRemoveSourceFrom)
+                foreach (var associationRemovalTarget in associationRemovalTargets)
                 {
-                    IHasTwoWayRelation relatedContentToRemoveFrom;
-                    if (!contentRepo.TryGet(itemToRemoveSourceFrom, out relatedContentToRemoveFrom))
-                        continue;
-
-                    var writableContentToRemoveFrom = relatedContentToRemoveFrom.CreateWritableClone() as IHasTwoWayRelation;
-                    var propertyToRemoveFrom = writableContentToRemoveFrom.GetType().GetProperties().FirstOrDefault(x => x.Name == property.Name);
-
-                    if (propertyToRemoveFrom.PropertyType == typeof (ContentArea))
-                    {
-                        ContentArea contentArea = propertyToRemoveFrom.GetValue(writableContentToRemoveFrom) as ContentArea;
-                        if (contentArea == null)
-                            continue;
-
-                        var itemToRemove = contentArea.Items.FirstOrDefault(x => x.ContentLink.ID == associationSourceContent.ContentLink.ID);
-                        if (itemToRemove != null)
-                            contentArea.Items.Remove(itemToRemove);
-                    }
-
-                    if (propertyToRemoveFrom.PropertyType == typeof (IList<ContentReference>))
-                    {
-                        IList<ContentReference> contentRefList = propertyToRemoveFrom.GetValue(writableContentToRemoveFrom) as IList<ContentReference>;
-                        var itemToRemove = contentRefList.FirstOrDefault(x => x.ID == associationSourceContent.ContentLink.ID);
-                        contentRefList.Remove(itemToRemove);
-                    }
-
-                    showstopper.StopShowFor(writableContentToRemoveFrom.ContentLink.ID);
-                    contentRepo.Save(writableContentToRemoveFrom, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
+                    propertyWriter.RemoveAssociation(associationSourceContent, associationRemovalTarget, property);
                 }
 
                 IEnumerable<ContentReference> associationTargets = ContentAssociationsHelper.GetItemsToAddAssociationTo(property, associationSourceContent);
 
                 foreach (var associationTarget in associationTargets)
                 {
-                    propertyWriter.AddAssociation(associationTarget, associationSourceContent, property);
+                    propertyWriter.AddAssociation(associationSourceContent, associationTarget, property);
                 }
             }
 
             showstopper.StartShow();
         }
+
     }
 }

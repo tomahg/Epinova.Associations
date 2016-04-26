@@ -19,7 +19,7 @@ namespace Epinova.Associations
             _showstopper = showstopper;
         }
 
-        public void AddAssociation(ContentReference associationTarget, IHasTwoWayRelation associationSource, PropertyInfo property)
+        public void AddAssociation(IHasTwoWayRelation associationSource, ContentReference associationTarget, PropertyInfo property)
         {
             if (associationTarget.ID == associationSource.ContentLink.ID) // Avoid adding oneself, it'll only create trouble
                 return;
@@ -72,6 +72,38 @@ namespace Epinova.Associations
 
             _showstopper.StopShowFor(associationTarget.ID);
             _contentRepository.Save(writableRelatedContent, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
+        }
+
+
+        public void RemoveAssociation(IHasTwoWayRelation associationSourceContent, ContentReference associationRemovalTarget, PropertyInfo property)
+        {
+            IHasTwoWayRelation relatedContentToRemoveFrom;
+            if (!_contentRepository.TryGet(associationRemovalTarget, out relatedContentToRemoveFrom))
+                return;
+
+            var writableContentToRemoveFrom = relatedContentToRemoveFrom.CreateWritableClone() as IHasTwoWayRelation;
+            var propertyToRemoveFrom = writableContentToRemoveFrom.GetType().GetProperties().FirstOrDefault(x => x.Name == property.Name);
+
+            if (propertyToRemoveFrom.PropertyType == typeof(ContentArea))
+            {
+                ContentArea contentArea = propertyToRemoveFrom.GetValue(writableContentToRemoveFrom) as ContentArea;
+                if (contentArea == null)
+                    return;
+
+                var itemToRemove = contentArea.Items.FirstOrDefault(x => x.ContentLink.ID == associationSourceContent.ContentLink.ID);
+                if (itemToRemove != null)
+                    contentArea.Items.Remove(itemToRemove);
+            }
+
+            if (propertyToRemoveFrom.PropertyType == typeof(IList<ContentReference>))
+            {
+                IList<ContentReference> contentRefList = propertyToRemoveFrom.GetValue(writableContentToRemoveFrom) as IList<ContentReference>;
+                var itemToRemove = contentRefList.FirstOrDefault(x => x.ID == associationSourceContent.ContentLink.ID);
+                contentRefList.Remove(itemToRemove);
+            }
+
+            _showstopper.StopShowFor(writableContentToRemoveFrom.ContentLink.ID);
+            _contentRepository.Save(writableContentToRemoveFrom, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
         }
 
     }
