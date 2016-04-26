@@ -29,13 +29,14 @@ namespace Epinova.Associations
             {
                 IEnumerable<ContentReference> associationRemovalTargets = contentAssociationsHelper.GetAssociationRemovalTargets(property, currentContentVersion, associationSourceContent);
 
+                var propertyName = property.Name;
                 foreach (var associationRemovalTarget in associationRemovalTargets)
-                    propertyWriter.RemoveAssociation(associationSourceContent, associationRemovalTarget, property);
+                    propertyWriter.RemoveAssociation(associationSourceContent, associationRemovalTarget, propertyName);
                 
                 IEnumerable<ContentReference> associationTargets = contentAssociationsHelper.GetAssociationTargets(property, associationSourceContent);
 
                 foreach (var associationTarget in associationTargets)
-                    propertyWriter.AddAssociation(associationSourceContent, associationTarget, property);
+                    propertyWriter.AddAssociation(associationSourceContent, associationTarget, propertyName);
             }
 
             showstopper.StartShow();

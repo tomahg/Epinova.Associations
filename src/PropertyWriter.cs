@@ -19,7 +19,13 @@ namespace Epinova.Associations
             _showstopper = showstopper;
         }
 
-        public void AddAssociation(IHasTwoWayRelation associationSource, ContentReference associationTarget, PropertyInfo property)
+        /// <summary>
+        /// Adds the associationSource as associated content in associationTarget in the given property.
+        /// </summary>
+        /// <param name="associationSource">The content that will be added as an association in associationTarget</param>
+        /// <param name="associationTarget">The content that will have associationSource added as an association</param>
+        /// <param name="propertyName">The name of the property to modify</param>
+        public void AddAssociation(IHasTwoWayRelation associationSource, ContentReference associationTarget, string propertyName)
         {
             if (associationTarget.ID == associationSource.ContentLink.ID) // Avoid adding oneself, it'll only create trouble
                 return;
@@ -30,7 +36,7 @@ namespace Epinova.Associations
 
             var associationTargetProperty = associatedContent.GetType()
                                                              .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                                                             .FirstOrDefault(x => x.Name == property.Name);
+                                                             .FirstOrDefault(x => x.Name == propertyName);
 
             var writableRelatedContent = associatedContent.CreateWritableClone() as IHasTwoWayRelation;
             if (associationTargetProperty.PropertyType == typeof(ContentArea))
@@ -67,15 +73,21 @@ namespace Epinova.Associations
             _showstopper.StopShowFor(associationTarget.ID);
             _contentRepository.Save(writableRelatedContent, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
         }
-        
-        public void RemoveAssociation(IHasTwoWayRelation associationSourceContent, ContentReference associationRemovalTarget, PropertyInfo property)
+
+        /// <summary>
+        /// Removes the given associationSourceContent from the associationRemovalTarget in the given property
+        /// </summary>
+        /// <param name="associationSourceContent">The content to be removed as an association</param>
+        /// <param name="associationRemovalTarget">The content that will have the sourceContent removed as an association</param>
+        /// <param name="propertyName">The name of the property to modify</param>
+        public void RemoveAssociation(IHasTwoWayRelation associationSourceContent, ContentReference associationRemovalTarget, string propertyName)
         {
             IHasTwoWayRelation associationRemovalTargetContent;
             if (!_contentRepository.TryGet(associationRemovalTarget, out associationRemovalTargetContent))
                 return;
 
             var writableAssociationRemovalTargetContent = associationRemovalTargetContent.CreateWritableClone() as IHasTwoWayRelation;
-            var associationRemovalTargetProperty = writableAssociationRemovalTargetContent.GetType().GetProperties().FirstOrDefault(x => x.Name == property.Name);
+            var associationRemovalTargetProperty = writableAssociationRemovalTargetContent.GetType().GetProperties().FirstOrDefault(x => x.Name == propertyName);
 
             if (associationRemovalTargetProperty.PropertyType == typeof(ContentArea))
             {
