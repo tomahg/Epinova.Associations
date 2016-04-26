@@ -2,6 +2,9 @@
 
 namespace Epinova.Associations
 {
+    /// <summary>
+    /// This class exists to make sure Episerver doesn't go wild and save everything recursively when a lot of relations have been added.
+    /// </summary>
     internal class Showstopper
     {
         private List<int> ContentIdsToIgnoreEvents { get; set; }

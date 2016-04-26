@@ -8,6 +8,9 @@ using EPiServer.Security;
 
 namespace Epinova.Associations
 {
+    /// <summary>
+    /// Class to take care of writing modifications to episerver properties.
+    /// </summary>
     internal class PropertyWriter
     {
         private readonly IContentRepository _contentRepository;
