@@ -150,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ContentAssociationAttribute.cs" />
+    <Compile Include="ContentAssociationsHelper.cs" />
     <Compile Include="ContentEvents.cs" />
     <Compile Include="Initialization\DependencyResolverInitialization.cs" />
     <Compile Include="Initialization\EventInitialization.cs" />
