@@ -63,11 +63,17 @@ namespace Epinova.Associations
 
                 if (associationTargetContentRefList == null)
                 {
-                    associationTargetContentRefList = new List<ContentReference>();
+                    associationTargetContentRefList = new List<ContentReference>
+                    {
+                        associationSource.ContentLink 
+                        // INFO: Yes, add the contentRef here directly if the list is null. Setting the property to 
+                        //       an empty list results in NULL inside Episerver, and nothing is achieved. Ever.
+                    };
+
                     associationTargetProperty.SetValue(writableRelatedContent, associationTargetContentRefList);
                 }
-
-                associationTargetContentRefList.Add(associationSource.ContentLink);
+                else
+                    associationTargetContentRefList.Add(associationSource.ContentLink);
             }
 
             _showstopper.StopShowFor(associationTarget.ID);
