@@ -159,6 +159,7 @@
     <Compile Include="Showstopper.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Epinova.Associations.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
