@@ -12,5 +12,8 @@
     <releaseNotes></releaseNotes>
     <copyright>Copyright © Epinova 2016</copyright>
     <tags>EPiServer Epinova Basics CMS 9</tags>
+    <dependencies>
+      <dependency id="EPiServer.CMS.Core" version="[9.0.0, 10.0.0)" />
+    </dependencies>
   </metadata>
 </package>
