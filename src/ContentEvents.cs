@@ -19,26 +19,23 @@ namespace Epinova.Associations
 
             var contentRepo = ServiceLocator.Current.GetInstance<IContentRepository>();
             var propertyWriter = ServiceLocator.Current.GetInstance<PropertyWriter>();
+            var contentAssociationsHelper = ServiceLocator.Current.GetInstance<ContentAssociationsHelper>();
 
             var currentContentVersion = contentRepo.Get<IHasTwoWayRelation>(new ContentReference(args.Content.ContentLink.ID, true));
 
-            var associationProperties = ContentAssociationsHelper.GetAssociationProperties(associationSourceContent);
+            var associationProperties = contentAssociationsHelper.GetAssociationProperties(associationSourceContent);
 
             foreach (var property in associationProperties)
             {
-                IEnumerable<ContentReference> associationRemovalTargets = ContentAssociationsHelper.GetAssociationRemovalTargets(property, currentContentVersion, associationSourceContent);
+                IEnumerable<ContentReference> associationRemovalTargets = contentAssociationsHelper.GetAssociationRemovalTargets(property, currentContentVersion, associationSourceContent);
 
                 foreach (var associationRemovalTarget in associationRemovalTargets)
-                {
                     propertyWriter.RemoveAssociation(associationSourceContent, associationRemovalTarget, property);
-                }
-
-                IEnumerable<ContentReference> associationTargets = ContentAssociationsHelper.GetAssociationTargets(property, associationSourceContent);
+                
+                IEnumerable<ContentReference> associationTargets = contentAssociationsHelper.GetAssociationTargets(property, associationSourceContent);
 
                 foreach (var associationTarget in associationTargets)
-                {
                     propertyWriter.AddAssociation(associationSourceContent, associationTarget, property);
-                }
             }
 
             showstopper.StartShow();
