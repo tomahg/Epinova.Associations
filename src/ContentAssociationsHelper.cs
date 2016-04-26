@@ -25,7 +25,7 @@ namespace Epinova.Associations
             }
         }
 
-        public static IEnumerable<ContentReference> GetItemsToRemoveSourceFrom(PropertyInfo property, IHasTwoWayRelation currentlyPublishedVersion,
+        public static IEnumerable<ContentReference> GetAssociationRemovalTargets(PropertyInfo property, IHasTwoWayRelation currentlyPublishedVersion,
             IHasTwoWayRelation sourceRelationContent)
         {
             if (property.PropertyType == typeof (ContentArea))
@@ -65,7 +65,7 @@ namespace Epinova.Associations
             throw new Exception("Attempt to use property on unsupported property. Currently, ContentArea and IList<ContentArea> is supported");
         }
 
-        public static IEnumerable<ContentReference> GetItemsToAddAssociationTo(PropertyInfo property, IHasTwoWayRelation sourceRelationContent)
+        public static IEnumerable<ContentReference> GetAssociationTargets(PropertyInfo property, IHasTwoWayRelation sourceRelationContent)
         {
             if (property.PropertyType == typeof (ContentArea))
             {
