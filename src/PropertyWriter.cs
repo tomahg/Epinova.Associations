@@ -98,6 +98,9 @@ namespace Epinova.Associations
             if (propertyToRemoveFrom.PropertyType == typeof(IList<ContentReference>))
             {
                 IList<ContentReference> contentRefList = propertyToRemoveFrom.GetValue(writableContentToRemoveFrom) as IList<ContentReference>;
+                if (contentRefList == null)
+                    return;
+
                 var itemToRemove = contentRefList.FirstOrDefault(x => x.ID == associationSourceContent.ContentLink.ID);
                 contentRefList.Remove(itemToRemove);
             }
