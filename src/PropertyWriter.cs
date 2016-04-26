@@ -41,6 +41,9 @@ namespace Epinova.Associations
                                                              .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                                                              .FirstOrDefault(x => x.Name == propertyName);
 
+            if (associationTargetProperty == null)
+                return;
+
             var writableRelatedContent = associatedContent.CreateWritableClone() as IAssociationContent;
             if (associationTargetProperty.PropertyType == typeof(ContentArea))
             {
@@ -96,7 +99,12 @@ namespace Epinova.Associations
                 return;
 
             var writableAssociationRemovalTargetContent = associationRemovalTargetContent.CreateWritableClone() as IAssociationContent;
-            var associationRemovalTargetProperty = writableAssociationRemovalTargetContent.GetType().GetProperties().FirstOrDefault(x => x.Name == propertyName);
+            var associationRemovalTargetProperty = writableAssociationRemovalTargetContent.GetType()
+                                                                                          .GetProperties()
+                                                                                          .FirstOrDefault(x => x.Name == propertyName);
+
+            if (associationRemovalTargetProperty == null)
+                return;
 
             if (associationRemovalTargetProperty.PropertyType == typeof(ContentArea))
             {
