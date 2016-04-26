@@ -5,7 +5,7 @@ using EPiServer.ServiceLocation;
 
 namespace Epinova.Associations
 {
-    public class ContentEvents
+    internal class ContentEvents
     {
         public static void BindTwoWayRelationalContent(object sender, ContentEventArgs args)
         {

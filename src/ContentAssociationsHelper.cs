@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,7 +6,7 @@ using EPiServer.Core;
 
 namespace Epinova.Associations
 {
-    public class ContentAssociationsHelper
+    internal class ContentAssociationsHelper
     {
         private readonly Type[] _supportedTypes = { typeof (ContentArea), typeof (IList<ContentReference>) };
 
