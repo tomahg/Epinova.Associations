@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Epinova.Associations")]
 [assembly: AssemblyDescription("Simple to use two-way associations between Episerver content.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Epinova")]
 [assembly: AssemblyProduct("Epinova.Associations")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
