@@ -10,7 +10,7 @@ namespace Epinova.Associations
     {
         private readonly Type[] _supportedTypes = { typeof (ContentArea), typeof (IList<ContentReference>) };
 
-        public IEnumerable<PropertyInfo> GetAssociationProperties(IHasTwoWayRelation sourceRelationContent)
+        public IEnumerable<PropertyInfo> GetAssociationProperties(IAssociationContent sourceRelationContent)
         {
             var contentType = sourceRelationContent.GetType();
             var contentProperties = contentType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -22,7 +22,7 @@ namespace Epinova.Associations
             }
         }
 
-        public IEnumerable<ContentReference> GetAssociationRemovalTargets(PropertyInfo property, IHasTwoWayRelation currentlyPublishedVersion, IHasTwoWayRelation sourceRelationContent)
+        public IEnumerable<ContentReference> GetAssociationRemovalTargets(PropertyInfo property, IAssociationContent currentlyPublishedVersion, IAssociationContent sourceRelationContent)
         {
             if (property.PropertyType == typeof (ContentArea))
             {
@@ -36,7 +36,7 @@ namespace Epinova.Associations
             throw new Exception("Attempt to use property on unsupported property. Currently, ContentArea and IList<ContentArea> is supported");
         }
 
-        private IEnumerable<ContentReference> GetContentReferenceListRemovalTargets(PropertyInfo property, IHasTwoWayRelation currentlyPublishedVersion, IHasTwoWayRelation sourceRelationContent)
+        private IEnumerable<ContentReference> GetContentReferenceListRemovalTargets(PropertyInfo property, IAssociationContent currentlyPublishedVersion, IAssociationContent sourceRelationContent)
         {
             var currentContent = property.GetValue(currentlyPublishedVersion) as IList<ContentReference>;
             var newContent = property.GetValue(sourceRelationContent) as IList<ContentReference>;
@@ -52,7 +52,7 @@ namespace Epinova.Associations
             return currentContent.Where(x => itemsToRemoveFrom.Contains(x.ID));
         }
 
-        private IEnumerable<ContentReference> GetContentAreaRemovalTargets(PropertyInfo property, IHasTwoWayRelation currentlyPublishedVersion, IHasTwoWayRelation sourceRelationContent)
+        private IEnumerable<ContentReference> GetContentAreaRemovalTargets(PropertyInfo property, IAssociationContent currentlyPublishedVersion, IAssociationContent sourceRelationContent)
         {
             var currentContent = property.GetValue(currentlyPublishedVersion) as ContentArea;
             var newContent = property.GetValue(sourceRelationContent) as ContentArea;
@@ -70,7 +70,7 @@ namespace Epinova.Associations
                                  .Select(x => x.ContentLink);
         }
 
-        public IEnumerable<ContentReference> GetAssociationTargets(PropertyInfo property, IHasTwoWayRelation sourceRelationContent)
+        public IEnumerable<ContentReference> GetAssociationTargets(PropertyInfo property, IAssociationContent sourceRelationContent)
         {
             if (property.PropertyType == typeof (ContentArea))
             {

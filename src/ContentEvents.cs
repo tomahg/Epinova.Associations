@@ -13,7 +13,7 @@ namespace Epinova.Associations
             if (showstopper.IsShowStoppedFor(args.Content.ContentLink.ID))
                 return;
 
-            var associationSourceContent = args.Content as IHasTwoWayRelation;
+            var associationSourceContent = args.Content as IAssociationContent;
             if (associationSourceContent == null)
                 return;
 
@@ -21,7 +21,7 @@ namespace Epinova.Associations
             var propertyWriter = ServiceLocator.Current.GetInstance<PropertyWriter>();
             var contentAssociationsHelper = ServiceLocator.Current.GetInstance<ContentInspector>();
 
-            var currentContentVersion = contentRepo.Get<IHasTwoWayRelation>(new ContentReference(args.Content.ContentLink.ID, true));
+            var currentContentVersion = contentRepo.Get<IAssociationContent>(new ContentReference(args.Content.ContentLink.ID, true));
 
             var associationProperties = contentAssociationsHelper.GetAssociationProperties(associationSourceContent);
 

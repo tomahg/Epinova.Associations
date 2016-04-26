@@ -25,12 +25,12 @@ namespace Epinova.Associations
         /// <param name="associationSource">The content that will be added as an association in associationTarget</param>
         /// <param name="associationTarget">The content that will have associationSource added as an association</param>
         /// <param name="propertyName">The name of the property to modify</param>
-        public void AddAssociation(IHasTwoWayRelation associationSource, ContentReference associationTarget, string propertyName)
+        public void AddAssociation(IAssociationContent associationSource, ContentReference associationTarget, string propertyName)
         {
             if (associationTarget.ID == associationSource.ContentLink.ID) // Avoid adding oneself, it'll only create trouble
                 return;
 
-            IHasTwoWayRelation associatedContent;
+            IAssociationContent associatedContent;
             if (!_contentRepository.TryGet(associationTarget, out associatedContent))
                 return;
 
@@ -38,7 +38,7 @@ namespace Epinova.Associations
                                                              .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                                                              .FirstOrDefault(x => x.Name == propertyName);
 
-            var writableRelatedContent = associatedContent.CreateWritableClone() as IHasTwoWayRelation;
+            var writableRelatedContent = associatedContent.CreateWritableClone() as IAssociationContent;
             if (associationTargetProperty.PropertyType == typeof(ContentArea))
             {
                 var relatedContentArea = associationTargetProperty.GetValue(writableRelatedContent) as ContentArea;
@@ -86,13 +86,13 @@ namespace Epinova.Associations
         /// <param name="associationSourceContent">The content to be removed as an association</param>
         /// <param name="associationRemovalTarget">The content that will have the sourceContent removed as an association</param>
         /// <param name="propertyName">The name of the property to modify</param>
-        public void RemoveAssociation(IHasTwoWayRelation associationSourceContent, ContentReference associationRemovalTarget, string propertyName)
+        public void RemoveAssociation(IAssociationContent associationSourceContent, ContentReference associationRemovalTarget, string propertyName)
         {
-            IHasTwoWayRelation associationRemovalTargetContent;
+            IAssociationContent associationRemovalTargetContent;
             if (!_contentRepository.TryGet(associationRemovalTarget, out associationRemovalTargetContent))
                 return;
 
-            var writableAssociationRemovalTargetContent = associationRemovalTargetContent.CreateWritableClone() as IHasTwoWayRelation;
+            var writableAssociationRemovalTargetContent = associationRemovalTargetContent.CreateWritableClone() as IAssociationContent;
             var associationRemovalTargetProperty = writableAssociationRemovalTargetContent.GetType().GetProperties().FirstOrDefault(x => x.Name == propertyName);
 
             if (associationRemovalTargetProperty.PropertyType == typeof(ContentArea))
@@ -120,13 +120,13 @@ namespace Epinova.Associations
             _contentRepository.Save(writableAssociationRemovalTargetContent, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
         }
 
-        private bool IsAlreadyContained(IHasTwoWayRelation associationSource, ContentArea associationTargetContentArea)
+        private bool IsAlreadyContained(IAssociationContent associationSource, ContentArea associationTargetContentArea)
         {
             return associationTargetContentArea != null &&
                    associationTargetContentArea.Items.Any(x => x.ContentLink.ID == associationSource.ContentLink.ID);
         }
 
-        private bool IsAlreadyContained(IHasTwoWayRelation associationSource, IList<ContentReference> associationTargetContentRefList)
+        private bool IsAlreadyContained(IAssociationContent associationSource, IList<ContentReference> associationTargetContentRefList)
         {
             return associationTargetContentRefList != null &&
                    associationTargetContentRefList.Any(x => x.ID == associationSource.ContentLink.ID);

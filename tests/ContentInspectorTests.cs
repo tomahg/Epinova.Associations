@@ -27,13 +27,13 @@ namespace Epinova.AssociationsTests
             Assert.AreEqual(0, associationProperties.Count());
         }
 
-        private class AssociationClass : PageData, IHasTwoWayRelation
+        private class AssociationClass : PageData, IAssociationContent
         {
             [ContentAssociation]
             public virtual ContentArea ContentArea { get; set; }
         }
 
-        private class AssociationLessClass : PageData, IHasTwoWayRelation
+        private class AssociationLessClass : PageData, IAssociationContent
         {
         }
     }
