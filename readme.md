@@ -1,10 +1,11 @@
 # Epinova.Associations
 
-Easy to use two way relationship between content.
+Flexible, easy to use two way relationship between content nodes.
 
 - Supports both `ContentArea` and `IList<ContentReference>` as both source and target for an association, and you can use differerent types in each end of the relationship.
-- Matches association sources and targets on **property name**
+- Matches association sources and targets on **property name** (meaning you can have multiple different associations per content type)
 - To use, let your content type class implement IAssociationContent, and simply add `[ContentAssociation]` to the properties you want to use for associations.
+    - Supports `IContent`, meaning associations can be added to both pages, blocks or media types. Or anything else that implements `IReadOnly` and `IContent`. 
 - Associations are saved to the other side on publishing
 
 ## Examples
