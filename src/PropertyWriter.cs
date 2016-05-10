@@ -83,7 +83,7 @@ namespace Epinova.Associations
             }
 
             _showstopper.StopShowFor(associationTarget.ID);
-            _contentRepository.Save(writableRelatedContent, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
+            _contentRepository.Save(writableRelatedContent, SaveAction.Publish | SaveAction.ForceCurrentVersion | SaveAction.SkipValidation, AccessLevel.NoAccess);
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace Epinova.Associations
             }
 
             _showstopper.StopShowFor(writableAssociationRemovalTargetContent.ContentLink.ID);
-            _contentRepository.Save(writableAssociationRemovalTargetContent, SaveAction.Publish | SaveAction.ForceCurrentVersion, AccessLevel.NoAccess);
+            _contentRepository.Save(writableAssociationRemovalTargetContent, SaveAction.Publish | SaveAction.ForceCurrentVersion | SaveAction.SkipValidation, AccessLevel.NoAccess);
         }
 
         private bool IsAlreadyContained(IAssociationContent associationSource, ContentArea associationTargetContentArea)
