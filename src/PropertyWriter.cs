@@ -83,7 +83,7 @@ namespace Epinova.Associations
             }
 
             _showstopper.StopShowFor(associationTarget.ID);
-            _contentRepository.Save(writableRelatedContent, SaveAction.Publish | SaveAction.ForceCurrentVersion | SaveAction.SkipValidation, AccessLevel.NoAccess);
+            _contentRepository.Save(writableRelatedContent, GetSaveAction(writableRelatedContent), AccessLevel.NoAccess);
         }
 
         /// <summary>
@@ -128,7 +128,17 @@ namespace Epinova.Associations
             }
 
             _showstopper.StopShowFor(writableAssociationRemovalTargetContent.ContentLink.ID);
-            _contentRepository.Save(writableAssociationRemovalTargetContent, SaveAction.Publish | SaveAction.ForceCurrentVersion | SaveAction.SkipValidation, AccessLevel.NoAccess);
+            _contentRepository.Save(writableAssociationRemovalTargetContent, GetSaveAction(writableAssociationRemovalTargetContent), AccessLevel.NoAccess);
+        }
+
+        private SaveAction GetSaveAction(IContent content)
+        {
+            if (content is IVersionable && (content as IVersionable).Status == VersionStatus.Published)
+            {
+                return SaveAction.Publish | SaveAction.ForceCurrentVersion | SaveAction.SkipValidation;
+            }
+
+            return SaveAction.ForceCurrentVersion | SaveAction.SkipValidation;
         }
 
         private bool IsAlreadyContained(IAssociationContent associationSource, ContentArea associationTargetContentArea)
