@@ -12,7 +12,7 @@ namespace Epinova.Associations.Initialization
         public void Initialize(InitializationEngine context)
         {
             IContentEvents events = ServiceLocator.Current.GetInstance<IContentEvents>();
-            events.PublishingContent += ContentEvents.BindTwoWayRelationalContent;
+            events.PublishedContent += ContentEvents.BindTwoWayRelationalContent;
         }
 
         public void Uninitialize(InitializationEngine context)

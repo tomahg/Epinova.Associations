@@ -9,6 +9,10 @@ namespace Epinova.Associations
     {
         public static void BindTwoWayRelationalContent(object sender, ContentEventArgs args)
         {
+            //can't really do anything without a contentlink in the args...
+            if (args.ContentLink == null || args.ContentLink == ContentReference.EmptyReference)
+                return;
+
             var showstopper = ServiceLocator.Current.GetInstance<Showstopper>();
             if (showstopper.IsShowStoppedFor(args.Content.ContentLink.ID))
                 return;
