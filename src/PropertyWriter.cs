@@ -82,6 +82,15 @@ namespace Epinova.Associations
                     associationTargetContentRefList.Add(associationSource.ContentLink);
             }
 
+            if (associationTargetProperty.PropertyType == typeof(ContentReference))
+            {
+                var associationTargetContentRef = associationTargetProperty.GetValue(writableRelatedContent) as ContentReference;
+                if (IsAlreadyContained(associationSource, associationTargetContentRef))
+                    return;
+
+                associationTargetProperty.SetValue(writableRelatedContent, associationSource.ContentLink);
+            }
+
             _showstopper.StopShowFor(associationTarget.ID);
             _contentRepository.Save(writableRelatedContent, GetSaveAction(writableRelatedContent), AccessLevel.NoAccess);
         }
@@ -127,6 +136,17 @@ namespace Epinova.Associations
                 contentRefList.Remove(itemToRemove);
             }
 
+
+            if (associationRemovalTargetProperty.PropertyType == typeof(ContentReference))
+            {
+                ContentReference contentRef = associationRemovalTargetProperty.GetValue(writableAssociationRemovalTargetContent) as ContentReference;
+                if (contentRef == null)
+                    return;
+
+                if (contentRef.ID == associationSourceContent.ContentLink.ID)
+                    associationRemovalTargetProperty.SetValue(writableAssociationRemovalTargetContent, null);
+            }
+
             _showstopper.StopShowFor(writableAssociationRemovalTargetContent.ContentLink.ID);
             _contentRepository.Save(writableAssociationRemovalTargetContent, GetSaveAction(writableAssociationRemovalTargetContent), AccessLevel.NoAccess);
         }
@@ -151,6 +171,12 @@ namespace Epinova.Associations
         {
             return associationTargetContentRefList != null &&
                    associationTargetContentRefList.Any(x => x.ID == associationSource.ContentLink.ID);
+        }
+
+        private bool IsAlreadyContained(IAssociationContent associationSource, ContentReference associationTargetContentRef)
+        {
+            return associationTargetContentRef != null &&
+                   associationTargetContentRef.ID == associationSource.ContentLink.ID;
         }
     }
 }

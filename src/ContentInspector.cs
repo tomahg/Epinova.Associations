@@ -8,7 +8,7 @@ namespace Epinova.Associations
 {
     internal class ContentInspector
     {
-        private readonly Type[] _supportedTypes = { typeof (ContentArea), typeof (IList<ContentReference>) };
+        private readonly Type[] _supportedTypes = { typeof(ContentReference), typeof (ContentArea), typeof (IList<ContentReference>) };
 
         public IEnumerable<PropertyInfo> GetAssociationProperties(IAssociationContent sourceRelationContent)
         {
@@ -32,8 +32,26 @@ namespace Epinova.Associations
             {
                 return GetContentReferenceListRemovalTargets(property, currentlyPublishedVersion, sourceRelationContent);
             }
+            if (property.PropertyType == typeof (ContentReference))
+            {
+                return GetContentReferenceRemovalTargets(property, currentlyPublishedVersion, sourceRelationContent);
+            }
 
-            throw new Exception("Attempt to use property on unsupported property. Currently, ContentArea and IList<ContentArea> is supported");
+            throw new Exception("Attempt to use property on unsupported property. Currently, ContentReference, ContentArea and IList<ContentReference> is supported");
+        }
+
+        private IEnumerable<ContentReference> GetContentReferenceRemovalTargets(PropertyInfo property, IAssociationContent currentlyPublishedVersion, IAssociationContent sourceRelationContent)
+        {
+            var currentContent = property.GetValue(currentlyPublishedVersion) as ContentReference;
+            var newContent = property.GetValue(sourceRelationContent) as ContentReference;
+
+            if (currentContent == null)
+                return Enumerable.Empty<ContentReference>();
+
+            if(currentContent.ID == newContent?.ID)
+                return Enumerable.Empty<ContentReference>();
+
+            return new List<ContentReference>() {currentContent};
         }
 
         private IEnumerable<ContentReference> GetContentReferenceListRemovalTargets(PropertyInfo property, IAssociationContent currentlyPublishedVersion, IAssociationContent sourceRelationContent)
@@ -87,7 +105,15 @@ namespace Epinova.Associations
 
                 return contentRefList ?? Enumerable.Empty<ContentReference>();
             }
-            throw new Exception("Attempt to use property on unsupported property. Currently, ContentArea and IList<ContentArea> is supported");
+
+            if (property.PropertyType == typeof (ContentReference))
+            {
+                var contentRef = property.GetValue(sourceRelationContent) as ContentReference;
+
+                return contentRef == null ? Enumerable.Empty<ContentReference>() : new List<ContentReference>() {contentRef};
+            }
+
+            throw new Exception("Attempt to use property on unsupported property. Currently, ContentReference, ContentArea and IList<ContentReference> is supported");
         }
     }
 }
