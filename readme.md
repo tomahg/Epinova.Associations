@@ -2,7 +2,7 @@
 
 Flexible, easy to use two way relationship between content nodes.
 
-- Supports both `ContentArea` and `IList<ContentReference>` as both source and target for an association, and you can use differerent types in each end of the relationship.
+- Supports ContentReference, `IList<ContentReference>` and ContentArea as both source and target for an association, and you can use differerent types in each end of the relationship.
 - Matches association sources and targets on **property name** (meaning you can have multiple different associations per content type)
 - To use, let your content type class implement IAssociationContent, and simply add `[ContentAssociation]` to the properties you want to use for associations.
     - Supports `IContent`, meaning association properties can be added to both pages, blocks or media types; anything  that implements `IReadOnly` and `IContent`.
@@ -16,6 +16,9 @@ Flexible, easy to use two way relationship between content nodes.
     {
         [ContentAssociation]
         public virtual ContentArea EmployeeDocuments { get; set; }
+		
+        [ContentAssociation]
+        public virtual ContentArea Author { get; set; }
     }
 
     [ContentType(GUID = "...")]
@@ -23,6 +26,9 @@ Flexible, easy to use two way relationship between content nodes.
     {
         [ContentAssociation]
         public virtual IList<ContentReference> EmployeeDocuments { get; set; }
+				
+        [ContentAssociation]
+        public virtual ContentReference Author { get; set; }
     }
 
 Here, whatever you add into the `EmployeeDocuments` will be reflected to the other side of the relationship when you publish your content. Note that the property has the same *name* on both content types.
@@ -35,12 +41,20 @@ You can even use `[AllowedTypes]` in combination with this to restrict what type
         [ContentAssociation]
         [AllowedTypes(typeof(DocumentPage))]
         public virtual ContentArea EmployeeDocuments { get; set; }
+		
+        [ContentAssociation]
+        [AllowedTypes(typeof(DocumentPage))]
+        public virtual ContentArea Author { get; set; }
     }
 
     [ContentType(GUID = "...")]        
     public class DocumentPage : BasePageData, IAssociationContent
     {
         [ContentAssociation]
-        [AllowedTypes(typeof(EmpolyeePage))]
+        [AllowedTypes(typeof(EmployeePage))]
         public virtual IList<ContentReference> EmployeeDocuments { get; set; }
+		
+        [ContentAssociation]
+        [AllowedTypes(typeof(EmployeePage))]
+        public virtual ContentReference Author { get; set; }
     }
