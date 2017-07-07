@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using EPiServer;
 using EPiServer.Core;
+using EPiServer.Data.Entity;
 using EPiServer.DataAccess;
 using EPiServer.Security;
 using EPiServer.ServiceLocation;
@@ -60,10 +61,11 @@ namespace Epinova.Associations
 
             // Remove all elements in association properties and publish page. Publish event will handle the rest
             var contentRepository = ServiceLocator.Current.GetInstance<IContentRepository>();
-            var contentClone = contentRepository.Get<IAssociationContent>(args.ContentLink).CreateWritableClone() as IAssociationContent;
+            var content = contentRepository.Get<IContent>(args.ContentLink) as IReadOnly;
+
+            var contentClone = content?.CreateWritableClone() as IAssociationContent;
             if (contentClone == null)
                 return;
-
 
             var contentAssociationsHelper = ServiceLocator.Current.GetInstance<ContentInspector>();
             var associationProperties = contentAssociationsHelper.GetAssociationProperties(contentClone);
