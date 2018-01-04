@@ -22,7 +22,7 @@ namespace Epinova.Associations.Initialization
 
         public void ConfigureContainer(ServiceConfigurationContext context)
         {
-            context.Container.Configure(x => x.For<Showstopper>().Singleton());
+            context.StructureMap().Configure(x => x.For<Showstopper>().Singleton());
         }
     }
 }
